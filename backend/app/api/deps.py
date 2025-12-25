@@ -1,14 +1,12 @@
 from typing import AsyncIterator
-from contextlib import asynccontextmanager
 from app.clients.redis_client import get_redis
 
 
-@asynccontextmanager
 async def redis_dep() -> AsyncIterator:
+    """
+    FastAPI dependency that yields a Redis client.
+    The client uses a connection pool; no per-request cleanup needed.
+    """
     redis = get_redis()
-    try:
-        yield redis
-    finally:
-        # aioredis uses connection pools; explicit close not required per request.
-        pass
+    yield redis
 

@@ -1,0 +1,47 @@
+# Python/Backend
+backend/.venv/
+backend/__pycache__/
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/*.pyc
+backend/.env
+backend/.DS_Store
+backend/.coverage
+backend/instance/
+
+# Flutter/Mobile
+debug/
+build/
+.flutter-plugins
+dart_tool/
+.pub-cache/
+packages/
+mobile/build/
+mobile/.dart_tool/
+mobile/.idea/
+mobile/.packages
+mobile/.flutter-plugins
+yarn-error.log
+pubspec.lock
+# IDE/OS
+*.iml
+*.log
+*.swp
+*.swo
+*.swn
+*.swo
+.DS_Store
+.idea/
+.vscode/
+*.code-workspace
+Thumbs.db
+
+# General
+.env
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+.env.*
+*.orig
+

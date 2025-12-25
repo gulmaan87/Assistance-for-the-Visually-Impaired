@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Header
 from app.models.ocr import OCRRequest, OCRResponse
 from app.core.security import get_current_subject
 from app.api.deps import redis_dep
+from app.clients.storage_client import StorageClient
 from app.services import cache, ocr
 from app.core.config import settings
 
@@ -15,6 +16,12 @@ async def run_ocr_endpoint(
     idem_key: str | None = Header(default=None, alias="idempotency-key"),
     redis=Depends(redis_dep),
 ):
+    storage = StorageClient()
+    try:
+        validated_url = storage.validate_image_url(str(payload.image_url))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
+
     if idem_key and (prior := await cache.idempotency_check(redis, idem_key)):
         return OCRResponse(
             text=prior,
@@ -31,7 +38,7 @@ async def run_ocr_endpoint(
             detail="Rate limit exceeded",
         )
 
-    if cached := await cache.get_cached_ocr(redis, str(payload.image_url)):
+    if cached := await cache.get_cached_ocr(redis, validated_url):
         return OCRResponse(
             text=cached["text"],
             confidence=cached["confidence"],
@@ -40,9 +47,9 @@ async def run_ocr_endpoint(
             ttl_seconds=cached["ttl"],
         )
 
-    lock_key = cache.ocr_lock_key(str(payload.image_url))
+    lock_key = cache.ocr_lock_key(validated_url)
     result = await cache.with_lock(
-        redis, lock_key, settings.lock_ttl_seconds, ocr.run_ocr(str(payload.image_url), payload.locale)
+        redis, lock_key, settings.lock_ttl_seconds, ocr.run_ocr(validated_url, payload.locale)
     )
     # If lock not acquired, check cache again
     if result is None:
@@ -57,7 +64,7 @@ async def run_ocr_endpoint(
         raise HTTPException(status_code=503, detail="Please retry")
 
     text, confidence = result
-    ttl = await cache.set_cached_ocr(redis, str(payload.image_url), text, confidence)
+    ttl = await cache.set_cached_ocr(redis, validated_url, text, confidence)
     if idem_key:
         await cache.set_idempotency(redis, idem_key, text, ttl)
 
