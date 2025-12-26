@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import logging
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel
 from uuid import uuid4
 from app.core.security import get_current_subject
 from app.core.config import settings
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 class UploadUrlRequest(BaseModel):
     content_type: str = "image/jpeg"
@@ -18,10 +20,15 @@ class UploadUrlResponse(BaseModel):
 @router.post("", response_model=UploadUrlResponse)
 async def get_upload_url(
     params: UploadUrlRequest,
+    request: Request,
     subject: str = Depends(get_current_subject),
 ):
+    request_id = getattr(request.state, "request_id", "unknown")
+    logger.info(f"[{request_id}] Upload URL request: content_type={params.content_type}, suffix={params.suffix}, subject={subject}")
+    
     # For Week 1, mock presigned URL with a predictable S3 pattern
     if not settings.storage_base_url or not settings.storage_bucket:
+        logger.error(f"[{request_id}] Storage not configured")
         raise HTTPException(
             status_code=500,
             detail="Storage not configured"
@@ -35,6 +42,7 @@ async def get_upload_url(
     upload_url = image_url  # In real impl., signed PUT URL
     expiration = 300  # 5 min expiry hint
 
+    logger.info(f"[{request_id}] Generated upload URL: image_url={image_url}")
     return UploadUrlResponse(
         upload_url=upload_url,
         image_url=image_url,
