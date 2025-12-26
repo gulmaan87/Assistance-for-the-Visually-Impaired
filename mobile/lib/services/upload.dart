@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:mime/mime.dart';
@@ -10,11 +11,13 @@ class UploadService {
   final String authToken;
   final http.Client _client;
 
-  UploadService({required this.baseUrl, required this.authToken, http.Client? client})
+  UploadService(
+      {required this.baseUrl, required this.authToken, http.Client? client})
       : _client = client ?? http.Client();
 
   Future<UploadUrlResult> getUploadUrl(String filePath) async {
-    final suffix = p.extension(filePath).replaceFirst('.', '') ?? 'jpg';
+    final ext = p.extension(filePath).replaceFirst('.', '');
+    final suffix = ext.isEmpty ? 'jpg' : ext;
     final contentType = lookupMimeType(filePath) ?? 'image/jpeg';
     final resp = await _client.post(
       Uri.parse('$baseUrl/v1/upload-url'),
@@ -22,12 +25,15 @@ class UploadService {
         'content-type': 'application/json',
         'authorization': 'Bearer $authToken',
       },
-      body: '{"content_type": "$contentType", "suffix": "$suffix"}',
+      body: jsonEncode({
+        'content_type': contentType,
+        'suffix': suffix,
+      }),
     );
     if (resp.statusCode != 200) {
       throw Exception('Failed to get upload URL: ${resp.body}');
     }
-    final map = Map<String, dynamic>.from(http.Response.bytesToJson(resp.bodyBytes));
+    final map = jsonDecode(resp.body) as Map<String, dynamic>;
     return (
       uploadUrl: map['upload_url'] as String,
       imageUrl: map['image_url'] as String,
@@ -35,12 +41,14 @@ class UploadService {
     );
   }
 
-  Future<void> uploadToUrl(String uploadUrl, File image, {String? contentType}) async {
+  Future<void> uploadToUrl(String uploadUrl, File image,
+      {String? contentType}) async {
     final bytes = await image.readAsBytes();
     final resp = await _client.put(
       Uri.parse(uploadUrl),
       headers: {
-        'content-type': contentType ?? lookupMimeType(image.path) ?? 'image/jpeg',
+        'content-type':
+            contentType ?? lookupMimeType(image.path) ?? 'image/jpeg',
       },
       body: bytes,
     );
@@ -49,4 +57,3 @@ class UploadService {
     }
   }
 }
-
