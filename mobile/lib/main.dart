@@ -8,6 +8,8 @@ import 'services/haptics.dart';
 import 'services/network.dart';
 import 'services/session.dart';
 import 'services/tts_local.dart';
+import 'services/upload.dart';
+import 'services/image_picker_helper.dart';
 
 const _backendBaseUrl = 'http://localhost:8000'; // adjust for emulator/device
 const _placeholderImage =
@@ -43,6 +45,8 @@ class _VoiceFirstHomeState extends State<VoiceFirstHome> {
   final _session = Session();
   final _haptics = Haptics();
   final _tts = LocalTts();
+  final _imagePicker = ImagePickerHelper();
+  UploadService? _uploadService;
   late final ApiClient _apiClient;
 
   StreamSubscription<NetworkStatus>? _networkSub;
@@ -55,6 +59,8 @@ class _VoiceFirstHomeState extends State<VoiceFirstHome> {
   void initState() {
     super.initState();
     _apiClient = ApiClient(baseUrl: _backendBaseUrl, authToken: _demoToken);
+    _uploadService =
+        UploadService(baseUrl: _backendBaseUrl, authToken: _demoToken);
     _networkSub = _network.statusStream().listen((status) {
       setState(() {
         _online = status.isOnline;

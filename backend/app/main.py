@@ -10,6 +10,7 @@ from starlette.responses import Response
 import uuid
 
 from app.api.v1 import ocr, tts
+from app.api.v1 import upload
 from app.core.config import settings
 from app.core.logging import configure_logging
 
@@ -36,8 +37,8 @@ def create_app() -> FastAPI:
 
     app.include_router(ocr.router, prefix="/v1/ocr", tags=["ocr"])
     app.include_router(tts.router, prefix="/v1/tts", tags=["tts"])
+    app.include_router(upload.router, prefix="/v1/upload-url", tags=["upload"])
     return app
 
 
 app = create_app()
-
