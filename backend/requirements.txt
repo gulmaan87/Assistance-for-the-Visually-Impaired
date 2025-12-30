@@ -8,3 +8,12 @@ httpx==0.27.2
 pydantic-settings==2.6.0
 typing-extensions>=4.8.0
 
+# Week 2: ML/AI dependencies
+ultralytics>=8.0.0  # YOLOv8
+torch>=2.0.0  # PyTorch for BLIP and multimodal models
+torchvision>=0.15.0
+transformers>=4.35.0  # BLIP, ViT, and other HuggingFace models
+pillow>=10.0.0  # Image processing
+numpy>=1.24.0
+opencv-python-headless>=4.8.0  # Image processing for YOLOv8
+

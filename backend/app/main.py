@@ -1,7 +1,7 @@
 """
 FastAPI application entrypoint.
 Sets up request ID middleware, JWT stub authentication, Redis dependency wiring,
-and routes for Week 1 scope (OCR + TTS skeleton).
+and routes for Week 1 (OCR + TTS skeleton) and Week 2 (object detection, scene captioning, multimodal LLM).
 """
 from fastapi import FastAPI
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -9,8 +9,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 import uuid
 
-from app.api.v1 import ocr, tts
-from app.api.v1 import upload
+from app.api.v1 import ocr, tts, upload, object_detection, scene_caption, multimodal_llm
 from app.core.config import settings
 from app.core.logging import configure_logging
 
@@ -38,6 +37,18 @@ def create_app() -> FastAPI:
     app.include_router(ocr.router, prefix="/v1/ocr", tags=["ocr"])
     app.include_router(tts.router, prefix="/v1/tts", tags=["tts"])
     app.include_router(upload.router, prefix="/v1/upload-url", tags=["upload"])
+    
+    # Week 2 endpoints
+    app.include_router(
+        object_detection.router, prefix="/v1/object-detection", tags=["object-detection"]
+    )
+    app.include_router(
+        scene_caption.router, prefix="/v1/scene-caption", tags=["scene-caption"]
+    )
+    app.include_router(
+        multimodal_llm.router, prefix="/v1/multimodal-llm", tags=["multimodal-llm"]
+    )
+    
     return app
 
 

@@ -155,15 +155,18 @@ WEEK 1: FOUNDATION
 - OCR → TTS end-to-end
 - Documentation
 
-WEEK 1 STATUS (DONE)
-- Backend: FastAPI skeleton with request IDs, JWT stub, Redis (cache, locks, rate limit, idempotency), storage URL validation stub, OCR timeout guard, tests for cache hit/miss, idempotency replay, rate limit.
-- Mobile: Flutter skeleton with connectivity awareness, idempotency keys, OCR call to backend, TTS/haptics feedback, offline fallback messaging.
-- Tooling: Local venv, pytest passing.
+WEEK 1 STATUS (✅ COMPLETE)
+- ✅ System architecture: Designed edge-cloud separation with Redis performance layer
+- ✅ Backend skeleton: FastAPI with request ID middleware, JWT stub, Redis integration
+- ✅ Redis integration: Caching (OCR results), rate limiting, idempotency keys, distributed locks, all with TTL
+- ✅ Mobile app skeleton: Flutter with network awareness, image capture, upload flow
+- ✅ OCR → TTS end-to-end: Full flow from camera capture → upload → OCR → local TTS
+- ✅ Documentation: README files for project, backend, and mobile with setup instructions
 
-NEXT IMMEDIATE TASKS
-- Wire real image capture/upload with presigned URLs (storage client extension).
-- Add logging/timeout guards around OCR (done) and propagate request IDs in logs.
-- Add error toasts and retry/backoff on mobile; ensure accessibility cues remain voice/haptic-first.
+Completed Features:
+- Backend: FastAPI skeleton with request IDs, JWT stub, Redis (cache, locks, rate limit, idempotency), storage URL validation, OCR timeout guards, structured logging with request IDs, tests (cache hit/miss, idempotency replay, rate limit)
+- Mobile: Flutter skeleton with connectivity awareness, idempotency keys, real image capture/upload, OCR call to backend, TTS/haptics feedback, error handling with snackbars, offline fallback messaging
+- Documentation: Root README, backend README, mobile README with architecture, setup, and API docs
 
 WEEK 2: MULTIMODAL AI
 - Object detection
