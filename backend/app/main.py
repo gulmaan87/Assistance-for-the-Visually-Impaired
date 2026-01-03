@@ -9,7 +9,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 import uuid
 
-from app.api.v1 import ocr, tts, upload, object_detection, scene_caption, multimodal_llm
+from app.api.v1 import ocr, tts, upload, object_detection, scene_caption, multimodal_llm, async_job
 from app.core.config import settings
 from app.core.logging import configure_logging
 
@@ -47,6 +47,11 @@ def create_app() -> FastAPI:
     )
     app.include_router(
         multimodal_llm.router, prefix="/v1/multimodal-llm", tags=["multimodal-llm"]
+    )
+    
+    # Week 3: Async job processing
+    app.include_router(
+        async_job.router, prefix="/v1/async-jobs", tags=["async-jobs"]
     )
     
     return app

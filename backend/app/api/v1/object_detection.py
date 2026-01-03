@@ -167,3 +167,4 @@ async def run_object_detection_endpoint(
         ttl_seconds=ttl,
     )
 
+

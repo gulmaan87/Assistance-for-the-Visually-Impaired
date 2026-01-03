@@ -123,3 +123,4 @@ async def run_scene_captioning(
         logger.error(f"Scene captioning failed for {image_url}: {e}", exc_info=True)
         raise ValueError(f"Scene captioning failed: {str(e)}") from e
 
+

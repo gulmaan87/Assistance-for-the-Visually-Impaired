@@ -15,3 +15,4 @@ class SceneCaptionResponse(BaseModel):
     cache_hit: bool = False
     ttl_seconds: int
 
+

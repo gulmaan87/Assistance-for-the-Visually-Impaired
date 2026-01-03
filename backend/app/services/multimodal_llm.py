@@ -167,3 +167,4 @@ async def run_multimodal_llm(
         logger.error(f"Multimodal LLM failed for {image_url}: {e}", exc_info=True)
         raise ValueError(f"Multimodal LLM failed: {str(e)}") from e
 
+

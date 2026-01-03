@@ -10,6 +10,7 @@
         "connectivity_plus",
         "flutter",
         "flutter_tts",
+        "google_mlkit_text_recognition",
         "http",
         "image_picker",
         "mime",
@@ -43,6 +44,14 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "google_mlkit_text_recognition",
+      "version": "0.12.1",
+      "dependencies": [
+        "flutter",
+        "google_mlkit_commons"
       ]
     },
     {
@@ -206,6 +215,13 @@
         "stream_channel",
         "string_scanner",
         "term_glyph"
+      ]
+    },
+    {
+      "name": "google_mlkit_commons",
+      "version": "0.7.1",
+      "dependencies": [
+        "flutter"
       ]
     },
     {

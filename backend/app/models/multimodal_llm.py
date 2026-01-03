@@ -33,3 +33,4 @@ class NaturalLanguageQueryResponse(BaseModel):
     cache_hit: bool = False
     ttl_seconds: int
 
+

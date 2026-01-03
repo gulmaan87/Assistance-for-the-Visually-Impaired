@@ -9,6 +9,7 @@ import 'services/session.dart';
 import 'services/tts_local.dart';
 import 'services/upload.dart';
 import 'services/image_picker_helper.dart';
+import 'services/ocr_service.dart' show SmartOcrService, OcrServiceResult, OcrSource;
 
 const _backendBaseUrl = 'http://localhost:8000'; // adjust for emulator/device
 const _demoToken = 'demo-token'; // replace with real JWT when available
@@ -45,6 +46,7 @@ class _VoiceFirstHomeState extends State<VoiceFirstHome> {
   final _imagePicker = ImagePickerHelper();
   UploadService? _uploadService;
   late final ApiClient _apiClient;
+  SmartOcrService? _ocrService;
 
   StreamSubscription<NetworkStatus>? _networkSub;
   bool _online = false;
@@ -58,6 +60,11 @@ class _VoiceFirstHomeState extends State<VoiceFirstHome> {
     _apiClient = ApiClient(baseUrl: _backendBaseUrl, authToken: _demoToken);
     _uploadService =
         UploadService(baseUrl: _backendBaseUrl, authToken: _demoToken);
+    _ocrService = SmartOcrService(
+      apiClient: _apiClient,
+      uploadService: _uploadService!,
+      networkMonitor: _network,
+    );
     _networkSub = _network.statusStream().listen((status) {
       setState(() {
         _online = status.isOnline;
@@ -71,27 +78,18 @@ class _VoiceFirstHomeState extends State<VoiceFirstHome> {
   @override
   void dispose() {
     _networkSub?.cancel();
+    _ocrService?.dispose();
     super.dispose();
   }
 
   Future<void> _runOcr() async {
     setState(() {
       _loading = true;
-      _status = _online ? 'Ready to capture...' : 'Offline: using local text';
+      _status = _online
+          ? 'Ready to capture...'
+          : 'Offline: will use local OCR';
     });
     try {
-      if (!_online) {
-        _lastText = 'Offline. Please connect to run OCR.';
-        await _tts.speak(_lastText);
-        await _haptics.error();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Offline: Please connect to run OCR')),
-          );
-        }
-        return;
-      }
-
       // Step 1: Capture image from camera
       setState(() {
         _status = 'Opening camera...';
@@ -104,88 +102,45 @@ class _VoiceFirstHomeState extends State<VoiceFirstHome> {
         return;
       }
 
-      // Step 2: Get upload URL from backend
-      final uploadService = _uploadService!;
-      late String uploadUrl, imageUrl;
-      try {
-        setState(() {
-          _status = 'Getting upload URL...';
-        });
-        final urlRes = await uploadService.getUploadUrl(imageFile.path);
-        uploadUrl = urlRes.uploadUrl;
-        imageUrl = urlRes.imageUrl;
-      } catch (e) {
-        final errorMsg = 'Failed to get upload URL: $e';
-        setState(() {
-          _status = errorMsg;
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(errorMsg)),
-          );
-        }
-        await _tts.speak('Upload URL request failed');
-        await _haptics.error();
-        return;
-      }
-
-      // Step 3: Upload image to storage
-      try {
-        setState(() {
-          _status = 'Uploading image...';
-        });
-        await uploadService.uploadToUrl(uploadUrl, imageFile);
-      } catch (e) {
-        final errorMsg = 'Upload failed: $e';
-        setState(() {
-          _status = errorMsg;
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(errorMsg)),
-          );
-        }
-        await _tts.speak('Image upload failed');
-        await _haptics.error();
-        return;
-      }
-
-      // Step 4: Run OCR on uploaded image
+      // Step 2: Run smart OCR (cloud/local switching)
       final idem = _session.newIdempotencyKey();
-      try {
-        setState(() {
-          _status = 'Running OCR...';
-        });
-        final result = await _apiClient.runOcr(
-          imageUrl: Uri.parse(imageUrl),
-          idempotencyKey: idem,
+      setState(() {
+        _status = _online ? 'Running cloud OCR...' : 'Running local OCR...';
+      });
+
+      final result = await _ocrService!.recognizeText(
+        imageFile: imageFile,
+        idempotencyKey: idem,
+      );
+
+      _lastText = result.text;
+      final sourceLabel = result.source == OcrSource.cloud
+          ? 'Cloud OCR'
+          : 'Local OCR';
+      _status = result.source == OcrSource.cloud &&
+              result.cacheHit
+          ? '$sourceLabel (cached, TTL ${result.ttlSeconds}s)'
+          : '$sourceLabel (confidence: ${(result.confidence * 100).toStringAsFixed(0)}%)';
+
+      // Speak the result with source indication
+      final speakText = result.text.isEmpty
+          ? 'No text detected'
+          : result.text;
+      await _tts.speak(speakText);
+      await _haptics.success();
+
+      if (mounted) {
+        final snackBarText = result.source == OcrSource.local
+            ? 'Using local OCR (offline mode)'
+            : result.cacheHit
+                ? 'Cache hit: result from cache'
+                : 'Cloud OCR completed';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(snackBarText)),
         );
-        _lastText = result.text;
-        _status = result.cacheHit
-            ? 'Cache hit (TTL ${result.ttlSeconds}s)'
-            : 'OCR fresh result';
-        await _tts.speak(result.text);
-        await _haptics.success();
-        if (mounted && result.cacheHit) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Cache hit: result from cache')),
-          );
-        }
-      } catch (e) {
-        final errorMsg = 'OCR failed: $e';
-        setState(() {
-          _status = errorMsg;
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(errorMsg)),
-          );
-        }
-        await _tts.speak('OCR processing failed');
-        await _haptics.error();
       }
     } catch (e) {
-      final errorMsg = 'Unexpected error: $e';
+      final errorMsg = 'OCR failed: $e';
       setState(() {
         _status = errorMsg;
       });
@@ -194,6 +149,7 @@ class _VoiceFirstHomeState extends State<VoiceFirstHome> {
           SnackBar(content: Text(errorMsg)),
         );
       }
+      await _tts.speak('OCR processing failed');
       await _haptics.error();
     } finally {
       if (mounted) {

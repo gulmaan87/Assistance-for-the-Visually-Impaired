@@ -158,6 +158,18 @@
       "languageVersion": "3.8"
     },
     {
+      "name": "google_mlkit_commons",
+      "rootUri": "file:///C:/Users/mohdg/AppData/Local/Pub/Cache/hosted/pub.dev/google_mlkit_commons-0.7.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.16"
+    },
+    {
+      "name": "google_mlkit_text_recognition",
+      "rootUri": "file:///C:/Users/mohdg/AppData/Local/Pub/Cache/hosted/pub.dev/google_mlkit_text_recognition-0.12.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.16"
+    },
+    {
       "name": "http",
       "rootUri": "file:///C:/Users/mohdg/AppData/Local/Pub/Cache/hosted/pub.dev/http-1.6.0",
       "packageUri": "lib/",

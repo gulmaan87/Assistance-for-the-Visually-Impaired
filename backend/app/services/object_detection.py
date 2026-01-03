@@ -129,3 +129,4 @@ async def run_object_detection(
         logger.error(f"Object detection failed for {image_url}: {e}", exc_info=True)
         raise ValueError(f"Object detection failed: {str(e)}") from e
 
+

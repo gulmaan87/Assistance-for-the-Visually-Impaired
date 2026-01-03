@@ -61,6 +61,15 @@ A production-grade, cloud-native, AI-powered system that helps visually impaired
 ✅ All endpoints include Redis caching, rate limiting, idempotency, and distributed locking  
 ✅ Consistent error handling and timeout management
 
+## Week 3 Status
+
+✅ On-device OCR fallback using Google ML Kit (offline capability)  
+✅ Network-aware switching (cloud vs local OCR based on connectivity)  
+✅ Async job processing queue for long-running ML tasks  
+✅ Redis-backed job state tracking with TTL  
+✅ Enhanced logging with edge-cloud intelligence metrics  
+✅ Graceful degradation when network is unavailable
+
 ## Quick Start
 
 ### Backend Setup
@@ -116,6 +125,14 @@ flutter run
   - Request: `{image_url, question, max_tokens?}`
   - Response: `{answer, confidence?, ...}`
 
+### Week 3 Endpoints
+- `POST /v1/async-jobs` - Create async job for long-running ML processing
+  - Request: `{job_type, image_url, parameters?}`
+  - Response: `{job_id, status, created_at, estimated_completion_seconds}`
+  
+- `GET /v1/async-jobs/{job_id}` - Get async job status and result
+  - Response: `{job_id, status, created_at, completed_at?, result?, error?, progress_percent?}`
+
 API docs available at: `http://localhost:8000/docs` (Swagger UI)
 
 ## Testing
@@ -158,13 +175,14 @@ Assistance-for-the-Visually-Impaired/
         └── services/         # API client, network, TTS, upload
 ```
 
-## Next Steps (Week 3+)
+## Next Steps (Week 4+)
 
 - Implement actual OCR with PaddleOCR or Tesseract (replace placeholder)
 - Performance optimization and model quantization
-- On-device fallback models (TFLite)
 - Enhanced error handling and fallback strategies
 - User preferences and model selection
 - Voice command interface
 - Continuous scene description mode
+- Privacy enhancements (anonymization, auto data deletion)
+- Production monitoring and alerting
 
